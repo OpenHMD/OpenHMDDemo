@@ -2,6 +2,8 @@
 
 OpenHMDDemo is a application written in Ogre (currently using stock 1.9) that shows a basic implementation of OpenHMD into a working functional framework.
 
+![alt tag](http://s18.postimg.org/mffh0c3pl/Open_HMD_Demo_App.png)
+
 Currently, just the basics are working, but a more pretty demo scene and some additional features will be added later on.
 
 **Working:**
