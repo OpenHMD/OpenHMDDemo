@@ -1,0 +1,22 @@
+compositor OculusComp
+{
+    technique
+    {
+        texture scene target_width_scaled 2.0 target_height_scaled 2.0 PF_A8R8G8B8
+
+        target scene { input previous }
+
+        target_output
+        {
+            // Start with clear output
+            input none
+
+            pass render_quad
+            {
+                material Oculus
+                input 0 scene
+            }
+        }
+    }
+}
+
