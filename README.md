@@ -26,6 +26,6 @@ The code uses default Ogre 1.9, tested with a boost compiled version from the Ub
 ###Debian/Ubuntu based distro's
 
 There are some basic dependencies to be able to compile this project.
->sudo apt-get install libogre-1.9-dev libois-dev libtinyxml2-dev
+>sudo apt-get install libogre-1.9-dev libois-dev libtinyxml-dev
 
 Compile using the current horrible compile.sh (i know, i should write a makefile)
