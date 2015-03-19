@@ -84,6 +84,16 @@ Ogre::Quaternion OpenHMD::getQuaternion()
     return returnquad;
 }
 
+Ogre::Vector2 OpenHMD::getScreenSize()
+{
+	Ogre::Vector2 screenSize;
+	ohmd_device_geti(hmd, OHMD_SCREEN_HORIZONTAL_RESOLUTION, &ival);
+	screenSize.x = ival;
+	ohmd_device_geti(hmd, OHMD_SCREEN_VERTICAL_RESOLUTION, &ival);
+	screenSize.y = ival;
+	return screenSize;
+}
+
 void OpenHMD::getVerbose()
 {
     float q[4];
@@ -92,6 +102,18 @@ void OpenHMD::getVerbose()
 
     ohmd_device_getf(hmd, OHMD_ROTATION_QUAT, q);
     printf("quat: % 4.4f, % 4.4f, % 4.4f, % 4.4f\n", q[0], q[1], q[2], q[3]);
+}
+
+std::string OpenHMD::getProduct()
+{
+	std::string returnDevice;
+	///TODO: Should have a way of getting the string information from the current hmd device, workaround for now.
+	unsigned int num_devices = ohmd_ctx_probe(ctx);
+	for(unsigned int i = 0; i < num_devices; i++)
+	{
+		returnDevice = ohmd_list_gets(ctx, i, OHMD_PRODUCT);
+	}
+	return returnDevice;
 }
 
 Ogre::Matrix4 OpenHMD::getLeftViewMatrix()

@@ -1,0 +1,40 @@
+fragment_program OculusFrag glsl
+{
+  source Oculus.frag.glsl
+  entry_point main
+  profiles fp40
+}
+
+vertex_program OculusVert glsl
+{
+  source Oculus.vert.glsl
+  entry_point main
+  profiles vp40
+}
+
+material OculusDK1
+{
+        technique
+        {
+                pass
+                {
+                        depth_check off
+
+                        vertex_program_ref OculusVert
+                        {
+                        }
+
+                        fragment_program_ref OculusFrag
+                        {
+                        }
+
+            			texture_unit
+            			{
+            				texture RT
+            				tex_coord_set 0
+            				tex_address_mode clamp
+            				filtering linear linear none
+            			}
+                }
+        }
+}

@@ -1,0 +1,40 @@
+fragment_program Oculus1080Frag glsl
+{
+  source Oculus1080.frag.glsl
+  entry_point main
+  profiles fp40
+}
+
+vertex_program Oculus1080Vert glsl
+{
+  source Oculus1080.vert.glsl
+  entry_point main
+  profiles vp40
+}
+
+material OculusDK2
+{
+        technique
+        {
+                pass
+                {
+                        depth_check off
+
+                        vertex_program_ref Oculus1080Vert
+                        {
+                        }
+
+                        fragment_program_ref Oculus1080Frag
+                        {
+                        }
+
+            			texture_unit
+            			{
+            				texture RT
+            				tex_coord_set 0
+            				tex_address_mode clamp
+            				filtering linear linear none
+            			}
+                }
+        }
+}

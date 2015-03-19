@@ -139,6 +139,7 @@ bool Application::init(void)
 	openhmd = new OpenHMD();
 	openhmd->init();
 	
+	//Create a dual toe-out camera setup
 	stereo_cam_left->setPosition(Ogre::Vector3(0,0,0) + ((mCamera->getOrientation() *  (Ogre::Vector3::UNIT_X * (0.064f))))); //Replaced OpenHMD ipd due to OpenHMD base IPD being less general
     stereo_cam_right->setPosition(Ogre::Vector3(0,0,0) + ((mCamera->getOrientation() * (Ogre::Vector3::NEGATIVE_UNIT_X* (0.064f)))));
     Ogre::Quaternion camFlipper = mCamera->getOrientation();
@@ -164,10 +165,22 @@ bool Application::init(void)
     leftVP->setBackgroundColour(Ogre::ColourValue(0.145f, 0.25f, 0.4f));
     rightVP->setBackgroundColour(Ogre::ColourValue(0.146f, 0.25f, 0.4f));
 
-    Ogre::CompositorInstance* leftComp = Ogre::CompositorManager::getSingletonPtr()->addCompositor(leftVP, "OculusComp"); //Note: Oculus DK1 resolution
-    Ogre::CompositorInstance* rightComp = Ogre::CompositorManager::getSingletonPtr()->addCompositor(rightVP, "OculusComp"); //Note: Oculus DK1 resolution
-    leftComp->setEnabled(true);
-    rightComp->setEnabled(true);
+	//Get physical screen resolution and use closest available compositor with stretching
+    Ogre::Vector2 hmdScreenSize = openhmd->getScreenSize();
+	if (hmdScreenSize.x == 1280 && hmdScreenSize.y == 800) //assume Oculus DK1 shader
+	{
+        Ogre::CompositorInstance* leftComp = Ogre::CompositorManager::getSingletonPtr()->addCompositor(leftVP, "OculusCompDK1");
+        Ogre::CompositorInstance* rightComp = Ogre::CompositorManager::getSingletonPtr()->addCompositor(rightVP, "OculusCompDK1");
+        leftComp->setEnabled(true);
+        rightComp->setEnabled(true);
+	}
+	else if (hmdScreenSize.x == 1920 && hmdScreenSize.y == 1080) //assume Oculus DK2 shader
+	{
+        Ogre::CompositorInstance* leftComp = Ogre::CompositorManager::getSingletonPtr()->addCompositor(leftVP, "OculusCompDK2");
+        Ogre::CompositorInstance* rightComp = Ogre::CompositorManager::getSingletonPtr()->addCompositor(rightVP, "OculusCompDK2");
+        leftComp->setEnabled(true);
+        rightComp->setEnabled(true);
+	}
  
     mInputManager = OIS::InputManager::createInputSystem( pl );
  

@@ -1,4 +1,4 @@
-compositor OculusComp
+compositor OculusCompDK1
 {
     technique
     {
@@ -13,10 +13,31 @@ compositor OculusComp
 
             pass render_quad
             {
-                material Oculus
+                material OculusDK1
                 input 0 scene
             }
         }
     }
 }
 
+compositor OculusCompDK2
+{
+    technique
+    {
+        texture scene target_width_scaled 1.0 target_height_scaled 1.0 PF_A8R8G8B8
+
+        target scene { input previous }
+
+        target_output
+        {
+            // Start with clear output
+            input none
+
+            pass render_quad
+            {
+                material OculusDK2
+                input 0 scene
+            }
+        }
+    }
+}

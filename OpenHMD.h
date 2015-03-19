@@ -11,6 +11,7 @@
 #include <openhmd/openhmd.h>
 #include <OgreMatrix4.h>
 #include <OgreMath.h>
+#include <OgreVector2.h>
 
 class OpenHMD
 {
@@ -20,7 +21,9 @@ public:
 	void exit();
 	void update();
 	void getVerbose();
+	std::string getProduct();
 	Ogre::Quaternion getQuaternion();
+	Ogre::Vector2 getScreenSize();
 	Ogre::Matrix4 getLeftViewMatrix();
 	Ogre::Matrix4 getLeftProjectionMatrix();
 	Ogre::Matrix4 getRightViewMatrix();
