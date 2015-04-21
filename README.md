@@ -9,7 +9,7 @@ Currently, just the basics are working, but a more pretty demo scene and some ad
 **Working:**
 - Functional OpenGL 2.1
 - DotSceneLoader based on timyxml
-- OpenHMD integrated with DK1 in mind (1280x800 resolution Shaders)
+- OpenHMD integrated with Oculus DK1 and DK2 in mind (1280x800 and 1920x1080 with 2x oversampling shaders)
 - Wireframe rendering toggle (r)
 - Commandline level loader with -l argument (all standard ogre .scene files should work)
 
