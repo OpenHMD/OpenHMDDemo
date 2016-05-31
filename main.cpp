@@ -140,13 +140,10 @@ bool Application::init(void)
 	openhmd = new OpenHMD();
 	openhmd->init();
 
-	//Create a dual toe-out camera setup
+	//Create a camera setup
 	stereo_cam_left->setPosition(Ogre::Vector3(0,0,0));
-    stereo_cam_right->setPosition(Ogre::Vector3(0,0,0));
-    Ogre::Quaternion camFlipper = mCamera->getOrientation();
-    Ogre::Quaternion camFlipped = Ogre::Quaternion(camFlipper.w, camFlipper.x, camFlipper.y, camFlipper.z);
-    stereo_cam_left->setOrientation(camFlipped);
-    stereo_cam_right->setOrientation(camFlipped);
+    stereo_cam_right->setPosition(Ogre::Vector3(0,0,0));\
+    //Set clip distances
     stereo_cam_left->setNearClipDistance(0.000012);
     stereo_cam_left->setFarClipDistance(200*120);
     stereo_cam_right->setNearClipDistance(0.000012);
@@ -164,24 +161,35 @@ bool Application::init(void)
     rightVP = mWindow->addViewport(stereo_cam_right, 2, 0.5f, 0, 0.5f, 1.0f);
 
     leftVP->setBackgroundColour(Ogre::ColourValue(0.145f, 0.25f, 0.4f));
-    rightVP->setBackgroundColour(Ogre::ColourValue(0.146f, 0.25f, 0.4f));
+    rightVP->setBackgroundColour(Ogre::ColourValue(0.145f, 0.25f, 0.4f));
 
 	//Get physical screen resolution and use closest available compositor with stretching
     Ogre::Vector2 hmdScreenSize = openhmd->getScreenSize();
-	if (hmdScreenSize.x == 1280 && hmdScreenSize.y == 800) //assume Oculus DK1 shader
-	{
-        Ogre::CompositorInstance* leftComp = Ogre::CompositorManager::getSingletonPtr()->addCompositor(leftVP, "OculusCompDK1");
-        Ogre::CompositorInstance* rightComp = Ogre::CompositorManager::getSingletonPtr()->addCompositor(rightVP, "OculusCompDK1");
+
+    if (!openhmd->isDummy())
+    {
+        if (hmdScreenSize[0] == 1280 && hmdScreenSize[1] == 800) //assume Oculus DK1 shader
+        {
+            Ogre::CompositorInstance* leftComp = Ogre::CompositorManager::getSingletonPtr()->addCompositor(leftVP, "HMD/OculusDK1");
+            Ogre::CompositorInstance* rightComp = Ogre::CompositorManager::getSingletonPtr()->addCompositor(rightVP, "HMD/OculusDK1");
+            leftComp->setEnabled(true);
+            rightComp->setEnabled(true);
+        }
+        else if (hmdScreenSize[0] == 1920 && hmdScreenSize[1] == 1080) //assume Oculus DK2 shader
+        {
+            Ogre::CompositorInstance* leftComp = Ogre::CompositorManager::getSingletonPtr()->addCompositor(leftVP, "HMD/OculusDK2");
+            Ogre::CompositorInstance* rightComp = Ogre::CompositorManager::getSingletonPtr()->addCompositor(rightVP, "HMD/OculusDK2");
+            leftComp->setEnabled(true);
+            rightComp->setEnabled(true);
+        }
+    }
+    else
+    {
+        Ogre::CompositorInstance* leftComp = Ogre::CompositorManager::getSingletonPtr()->addCompositor(leftVP, "HMD/GenericAutoScaling");
+        Ogre::CompositorInstance* rightComp = Ogre::CompositorManager::getSingletonPtr()->addCompositor(rightVP, "HMD/GenericAutoScaling");
         leftComp->setEnabled(true);
         rightComp->setEnabled(true);
-	}
-	else if (hmdScreenSize.x == 1920 && hmdScreenSize.y == 1080) //assume Oculus DK2 shader
-	{
-        Ogre::CompositorInstance* leftComp = Ogre::CompositorManager::getSingletonPtr()->addCompositor(leftVP, "OculusCompDK2");
-        Ogre::CompositorInstance* rightComp = Ogre::CompositorManager::getSingletonPtr()->addCompositor(rightVP, "OculusCompDK2");
-        leftComp->setEnabled(true);
-        rightComp->setEnabled(true);
-	}
+    }
 
     mInputManager = OIS::InputManager::createInputSystem( pl );
 

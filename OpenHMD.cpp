@@ -172,3 +172,17 @@ float OpenHMD::getIPD()
 
     return returnf;
 }
+
+void OpenHMD::setIPD(float inf)
+{
+    ohmd_device_setf(hmd, OHMD_EYE_IPD, &inf);
+}
+
+bool OpenHMD::isDummy()
+{
+	ohmd_ctx_probe(ctx);
+	if (strcmp(ohmd_list_gets(ctx, 0, OHMD_PRODUCT), "Dummy Device") == 0)
+		return true;
+
+	return false;
+}

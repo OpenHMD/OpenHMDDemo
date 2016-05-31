@@ -29,6 +29,8 @@ public:
 	Ogre::Matrix4 getRightViewMatrix();
 	Ogre::Matrix4 getRightProjectionMatrix();
 	float getIPD();
+	void setIPD(float inf);
+	bool isDummy();
 	float fval;
 	int ival;
 
