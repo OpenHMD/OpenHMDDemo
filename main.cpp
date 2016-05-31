@@ -182,6 +182,13 @@ bool Application::init(void)
             leftComp->setEnabled(true);
             rightComp->setEnabled(true);
         }
+        else
+        {
+            Ogre::CompositorInstance* leftComp = Ogre::CompositorManager::getSingletonPtr()->addCompositor(leftVP, "HMD/GenericAutoScaling");
+            Ogre::CompositorInstance* rightComp = Ogre::CompositorManager::getSingletonPtr()->addCompositor(rightVP, "HMD/GenericAutoScaling");
+            leftComp->setEnabled(true);
+            rightComp->setEnabled(true);
+        }
     }
     else
     {
