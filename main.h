@@ -27,20 +27,20 @@
 #include <OISInputManager.h>
 #include <OISKeyboard.h>
 #include <OISMouse.h>
- 
+
 class Application : public Ogre::FrameListener, public OIS::KeyListener, public OIS::MouseListener, public Ogre::WindowEventListener
 {
 public:
     Application(void);
     virtual ~Application(void);
     bool init(void);
-    
+
     //Set of movement variables
     bool moveForward;
     bool moveBack;
     bool moveLeft;
     bool moveRight;
-    
+
     Ogre::String level;
 protected:
     Ogre::Root *mRoot;
@@ -53,15 +53,15 @@ protected:
 
     bool mCursorWasVisible;                   // was cursor visible before dialog appeared
     bool mShutDown;
- 
+
     // OIS Input devices
     OIS::InputManager* mInputManager;
     OIS::Mouse*    mMouse;
     OIS::Keyboard* mKeyboard;
- 
+
     // Ogre::FrameListener
     virtual bool frameRenderingQueued(const Ogre::FrameEvent& evt);
- 
+
     // OIS::KeyListener
     virtual bool keyPressed( const OIS::KeyEvent &arg );
     virtual bool keyReleased( const OIS::KeyEvent &arg );
@@ -69,11 +69,11 @@ protected:
     virtual bool mouseMoved( const OIS::MouseEvent &arg );
     virtual bool mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id );
     virtual bool mouseReleased( const OIS::MouseEvent &arg, OIS::MouseButtonID id );
- 
+
     // Ogre::WindowEventListener
     virtual void windowResized(Ogre::RenderWindow* rw);
     virtual void windowClosed(Ogre::RenderWindow* rw);
-    
+
     //OpenHMD objects
     OpenHMD* openhmd;
 	Ogre::Viewport* leftVP;
@@ -81,5 +81,5 @@ protected:
 	Ogre::Camera* stereo_cam_left;
 	Ogre::Camera* stereo_cam_right;
 };
- 
+
 #endif // #ifndef __Application_h_

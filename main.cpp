@@ -1,16 +1,16 @@
 /*
 -----------------------------------------------------------------------------
-  /$$$$$$                                /$$   /$$ /$$      /$$ /$$$$$$$ 
+  /$$$$$$                                /$$   /$$ /$$      /$$ /$$$$$$$
  /$$__  $$                              | $$  | $$| $$$    /$$$| $$__  $$
 | $$  \ $$  /$$$$$$   /$$$$$$  /$$$$$$$ | $$  | $$| $$$$  /$$$$| $$  \ $$
 | $$  | $$ /$$__  $$ /$$__  $$| $$__  $$| $$$$$$$$| $$ $$/$$ $$| $$  | $$
 | $$  | $$| $$  \ $$| $$$$$$$$| $$  \ $$| $$__  $$| $$  $$$| $$| $$  | $$
 | $$  | $$| $$  | $$| $$_____/| $$  | $$| $$  | $$| $$\  $ | $$| $$  | $$
 |  $$$$$$/| $$$$$$$/|  $$$$$$$| $$  | $$| $$  | $$| $$ \/  | $$| $$$$$$$/
- \______/ | $$____/  \_______/|__/  |__/|__/  |__/|__/     |__/|_______/ 
-          | $$                                                           
-          | $$                                                           
-          |__/                                                           
+ \______/ | $$____/  \_______/|__/  |__/|__/  |__/|__/     |__/|_______/
+          | $$
+          | $$
+          |__/
 -----------------------------------------------------------------------------
 * OpenHMD - Free and Open Source API and drivers for immersive technology.
 * Copyright (C) 2013 Fredrik Hultin.
@@ -20,7 +20,7 @@
 */
 
 #include "main.h"
- 
+
 
 Application::Application(void)
     : mRoot(0),
@@ -51,23 +51,24 @@ Application::~Application(void)
     delete mRoot;
     delete openhmd;
 }
- 
+
 bool Application::init(void)
 {
+    printf("Starting OpenHMD OGRE Demo\n");
     mResourcesCfg = "resources.cfg";
     mPluginsCfg = "plugins.cfg";
- 
+
     // construct Ogre::Root
     mRoot = new Ogre::Root(mPluginsCfg);
- 
+
     // setup resources
     // Load resource paths from config file
     Ogre::ConfigFile cf;
     cf.load(mResourcesCfg);
- 
+
     // Go through all sections & settings in the file
     Ogre::ConfigFile::SectionIterator seci = cf.getSectionIterator();
- 
+
     Ogre::String secName, typeName, archName;
     while (seci.hasMoreElements())
     {
@@ -105,43 +106,43 @@ bool Application::init(void)
     mCamera = mSceneMgr->createSceneNode("mCamera");//mSceneMgr->createCamera("PlayerCam");
     stereo_cam_left = mSceneMgr->createCamera("leftCam");
     stereo_cam_right = mSceneMgr->createCamera("rightCam");
- 
+
     mCamera->setPosition(Ogre::Vector3(0,0,0)); //Spawn position
 
     // Set default mipmap level (NB some APIs ignore this)
     Ogre::TextureManager::getSingleton().setDefaultNumMipmaps(5);
 
-    
+
     // load resources
     Ogre::ResourceGroupManager::getSingleton().initialiseAllResourceGroups();
     // Create the scene
     Ogre::DotSceneLoader* dotSceneLoader = new Ogre::DotSceneLoader();
     dotSceneLoader->parseDotScene(level, "General", mSceneMgr);
-	
+
     // Set ambient light
     mSceneMgr->setAmbientLight(Ogre::ColourValue(0.5, 0.5, 0.5));
- 
+
     // Create a light
     Ogre::Light* l = mSceneMgr->createLight("MainLight");
     l->setPosition(20,80,50);
-    
+
     //create FrameListener
     Ogre::LogManager::getSingletonPtr()->logMessage("*** Initializing OIS ***");
     OIS::ParamList pl;
     size_t windowHnd = 0;
     std::ostringstream windowHndStr;
- 
+
     mWindow->getCustomAttribute("WINDOW", &windowHnd);
     windowHndStr << windowHnd;
     pl.insert(std::make_pair(std::string("WINDOW"), windowHndStr.str()));
- 
+
 	//setup OpenHMD
 	openhmd = new OpenHMD();
 	openhmd->init();
-	
+
 	//Create a dual toe-out camera setup
-	stereo_cam_left->setPosition(Ogre::Vector3(0,0,0) + ((mCamera->getOrientation() *  (Ogre::Vector3::UNIT_X * (0.064f))))); //Replaced OpenHMD ipd due to OpenHMD base IPD being less general
-    stereo_cam_right->setPosition(Ogre::Vector3(0,0,0) + ((mCamera->getOrientation() * (Ogre::Vector3::NEGATIVE_UNIT_X* (0.064f)))));
+	stereo_cam_left->setPosition(Ogre::Vector3(0,0,0));
+    stereo_cam_right->setPosition(Ogre::Vector3(0,0,0));
     Ogre::Quaternion camFlipper = mCamera->getOrientation();
     Ogre::Quaternion camFlipped = Ogre::Quaternion(camFlipper.w, camFlipper.x, camFlipper.y, camFlipper.z);
     stereo_cam_left->setOrientation(camFlipped);
@@ -156,7 +157,7 @@ bool Application::init(void)
 
     mCamera->attachObject(stereo_cam_left);
     mCamera->attachObject(stereo_cam_right);
-    
+
     //setup viewports and compositor
     mWindow->removeAllViewports();
     leftVP = mWindow->addViewport(stereo_cam_left, 1, 0, 0, 0.5f, 1.0f);
@@ -181,24 +182,23 @@ bool Application::init(void)
         leftComp->setEnabled(true);
         rightComp->setEnabled(true);
 	}
- 
+
     mInputManager = OIS::InputManager::createInputSystem( pl );
- 
+
     mKeyboard = static_cast<OIS::Keyboard*>(mInputManager->createInputObject( OIS::OISKeyboard, true ));
     mMouse = static_cast<OIS::Mouse*>(mInputManager->createInputObject( OIS::OISMouse, true ));
- 
+
     mMouse->setEventCallback(this);
     mKeyboard->setEventCallback(this);
- 
+
     //Set initial mouse clipping size
     windowResized(mWindow);
- 
+
     //Register as a Window listener
     Ogre::WindowEventUtilities::addWindowEventListener(mWindow, this);
- 
     mRoot->addFrameListener(this);
     mRoot->startRendering();
- 
+
     return true;
 }
 
@@ -207,20 +207,20 @@ bool Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 {
     if(mWindow->isClosed())
         return false;
- 
+
     if(mShutDown)
         return false;
- 
+
     //Need to capture/update each device
     mKeyboard->capture();
     mMouse->capture();
- 
+
 	//Update camera movement
 	if (moveForward) mCamera->translate(Ogre::Vector3(0,0,-0.01), Ogre::Node::TS_LOCAL);
 	if (moveBack) mCamera->translate(Ogre::Vector3(0,0,0.01), Ogre::Node::TS_LOCAL);
 	if (moveLeft) mCamera->translate(Ogre::Vector3(-0.01,0,0), Ogre::Node::TS_LOCAL);
 	if (moveRight) mCamera->translate(Ogre::Vector3(0.01,0,0), Ogre::Node::TS_LOCAL);
-	
+
 	//Update OpenHMD
 	openhmd->update();
     stereo_cam_left->setCustomProjectionMatrix(true, openhmd->getLeftProjectionMatrix().transpose());
@@ -228,24 +228,24 @@ bool Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	Ogre::Quaternion oculusCameraOrientation = openhmd->getQuaternion();
 	stereo_cam_left->setOrientation(oculusCameraOrientation);
 	stereo_cam_right->setOrientation(oculusCameraOrientation);
-	
+
     return true;
 }
 
 bool Application::keyPressed( const OIS::KeyEvent &arg )
-{ 
+{
 	switch (arg.key)
 	{
 		case OIS::KC_W: moveForward = true; break;
 		case OIS::KC_S: moveBack = true; break;
 		case OIS::KC_A: moveLeft = true; break;
 		case OIS::KC_D: moveRight = true; break;
-	
+
 		case OIS::KC_R:   // cycle polygon rendering mode
 		{
 			Ogre::String newVal;
 			Ogre::PolygonMode pm;
-			
+
 			switch (stereo_cam_left->getPolygonMode())
 			{
 			case Ogre::PM_SOLID:
@@ -260,19 +260,19 @@ bool Application::keyPressed( const OIS::KeyEvent &arg )
 				newVal = "Solid";
 				pm = Ogre::PM_SOLID;
 			}
-	 
+
 			stereo_cam_left->setPolygonMode(pm);
 			stereo_cam_right->setPolygonMode(pm);
 			break;
-		}	
+		}
 		case OIS::KC_F5: Ogre::TextureManager::getSingleton().reloadAll(); break; // refresh all textures
 		case OIS::KC_SYSRQ: mWindow->writeContentsToTimestampedFile("screenshot", ".jpg"); break; // take a screenshot
 		case OIS::KC_ESCAPE: mShutDown = true; break;
-	 
+
 		return true;
 	}
 }
- 
+
 bool Application::keyReleased( const OIS::KeyEvent &arg )
 {
 	switch (arg.key)
@@ -282,10 +282,10 @@ bool Application::keyReleased( const OIS::KeyEvent &arg )
 		case OIS::KC_A: moveLeft = false; break;
 		case OIS::KC_D: moveRight = false; break;
 	}
-	
+
     return true;
 }
- 
+
 bool Application::mouseMoved( const OIS::MouseEvent &arg )
 {
 	if ( arg.state.X.rel != 0 )
@@ -294,11 +294,11 @@ bool Application::mouseMoved( const OIS::MouseEvent &arg )
 		if (arg.state.X.rel > 0)
 			mCamera->yaw(Ogre::Degree(-0.5), Ogre::Node::TS_WORLD);
 		else
-			mCamera->yaw(Ogre::Degree(0.5), Ogre::Node::TS_WORLD);	
+			mCamera->yaw(Ogre::Degree(0.5), Ogre::Node::TS_WORLD);
 	}
 
 	if ( arg.state.Y.rel != 0 )
-	{	
+	{
 		//vertical rotation
 		if (arg.state.Y.rel > 0)
 			mCamera->pitch(Ogre::Degree(-0.5), Ogre::Node::TS_LOCAL);
@@ -308,29 +308,29 @@ bool Application::mouseMoved( const OIS::MouseEvent &arg )
 
     return true;
 }
- 
+
 bool Application::mousePressed( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
 {
     return true;
 }
- 
+
 bool Application::mouseReleased( const OIS::MouseEvent &arg, OIS::MouseButtonID id )
 {
     return true;
 }
- 
+
 //Adjust mouse clipping area
 void Application::windowResized(Ogre::RenderWindow* rw)
 {
     unsigned int width, height, depth;
     int left, top;
     rw->getMetrics(width, height, depth, left, top);
- 
+
     const OIS::MouseState &ms = mMouse->getMouseState();
     ms.width = width;
     ms.height = height;
 }
- 
+
 //Unattach OIS before window shutdown (very important under Linux)
 void Application::windowClosed(Ogre::RenderWindow* rw)
 {
@@ -341,24 +341,24 @@ void Application::windowClosed(Ogre::RenderWindow* rw)
         {
             mInputManager->destroyInputObject( mMouse );
             mInputManager->destroyInputObject( mKeyboard );
- 
+
             OIS::InputManager::destroyInputSystem(mInputManager);
             mInputManager = 0;
         }
     }
 }
- 
- 
- 
+
+
+
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
 #define WIN32_LEAN_AND_MEAN
 #include "windows.h"
 #endif
- 
+
 #ifdef __cplusplus
 extern "C" {
 #endif
- 
+
 #if OGRE_PLATFORM == OGRE_PLATFORM_WIN32
     INT WINAPI WinMain( HINSTANCE hInst, HINSTANCE, LPSTR strCmdLine, INT )
 #else
@@ -385,7 +385,7 @@ extern "C" {
         // Create application object
         Application app;
 		app.level = level;
-		
+
         try {
             app.init();
         } catch( Ogre::Exception& e ) {
@@ -396,10 +396,10 @@ extern "C" {
                 e.getFullDescription().c_str() << std::endl;
 #endif
         }
- 
+
         return 0;
     }
- 
+
 #ifdef __cplusplus
 }
 #endif
