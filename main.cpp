@@ -107,7 +107,7 @@ bool Application::init(void)
     stereo_cam_left = mSceneMgr->createCamera("leftCam");
     stereo_cam_right = mSceneMgr->createCamera("rightCam");
 
-    mCamera->setPosition(Ogre::Vector3(0,0,0)); //Spawn position
+    mCamera->setPosition(Ogre::Vector3(0,0,10)); //Spawn position
 
     // Set default mipmap level (NB some APIs ignore this)
     Ogre::TextureManager::getSingleton().setDefaultNumMipmaps(5);
