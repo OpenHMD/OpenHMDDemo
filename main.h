@@ -22,6 +22,7 @@
 #include <OgreWindowEventUtilities.h>
 #include <OgreCompositorManager.h>
 #include <OgreCompositorInstance.h>
+#include <OgreCompositorChain.h>
 
 #include <OISEvents.h>
 #include <OISInputManager.h>

@@ -249,6 +249,15 @@ bool Application::keyPressed( const OIS::KeyEvent &arg )
 		case OIS::KC_A: moveLeft = true; break;
 		case OIS::KC_D: moveRight = true; break;
 
+        case OIS::KC_L: // toggle the lens correction shader
+        {
+            Ogre::CompositorInstance* leftComp = Ogre::CompositorManager::getSingletonPtr()->getCompositorChain(leftVP)->getCompositor(0);
+            Ogre::CompositorInstance* rightComp = Ogre::CompositorManager::getSingletonPtr()->getCompositorChain(rightVP)->getCompositor(0);
+            leftComp->setEnabled(!leftComp->getEnabled());
+            rightComp->setEnabled(!rightComp->getEnabled());
+            break;
+        }
+
 		case OIS::KC_R:   // cycle polygon rendering mode
 		{
 			Ogre::String newVal;
