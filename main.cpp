@@ -141,8 +141,8 @@ bool Application::init(void)
 	openhmd->init();
 
 	//Create a camera setup
-	stereo_cam_left->setPosition(Ogre::Vector3(0,0,0));
-    stereo_cam_right->setPosition(Ogre::Vector3(0,0,0));\
+	stereo_cam_left->setPosition(openhmd->getLeftViewMatrix().getTrans());
+    stereo_cam_right->setPosition(openhmd->getRightViewMatrix().getTrans());
     //Set clip distances
     stereo_cam_left->setNearClipDistance(0.000012);
     stereo_cam_left->setFarClipDistance(200*120);
@@ -240,9 +240,9 @@ bool Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 	openhmd->update();
     stereo_cam_left->setCustomProjectionMatrix(true, openhmd->getLeftProjectionMatrix().transpose());
     stereo_cam_right->setCustomProjectionMatrix(true, openhmd->getRightProjectionMatrix().transpose());
-	Ogre::Quaternion oculusCameraOrientation = openhmd->getQuaternion();
-	stereo_cam_left->setOrientation(oculusCameraOrientation);
-	stereo_cam_right->setOrientation(oculusCameraOrientation);
+    Ogre::Quaternion oculusCameraOrientation = openhmd->getQuaternion();
+    stereo_cam_left->setOrientation(oculusCameraOrientation);
+    stereo_cam_right->setOrientation(oculusCameraOrientation);
 
     return true;
 }
