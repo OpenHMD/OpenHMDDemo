@@ -28,10 +28,12 @@ The code uses default Ogre 1.9, tested with a boost compiled version from the Ub
 
 There are some basic dependencies to be able to compile this project.
 >sudo apt-get install libogre-1.9-dev libois-dev libtinyxml-dev
+
 OpenHMD is required as well and can either be compiled from trunk (recommended) or installed from some repositories
 like Debian Sid or Ubuntu Zesty.
 
 CMake is used for building, if libraries are missing it will prompt which ones are missing.
 Basic compilation should be:
 >cmake .
+
 >make
