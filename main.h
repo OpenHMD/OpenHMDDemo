@@ -24,6 +24,12 @@
 #include <OgreCompositorInstance.h>
 #include <OgreCompositorChain.h>
 
+//Bullet Ogre includes
+#include "BtOgrePG.h"
+#include "BtOgreGP.h"
+#include "BtOgreExtras.h"
+
+//OIS (for Input)
 #include <OISEvents.h>
 #include <OISInputManager.h>
 #include <OISKeyboard.h>
