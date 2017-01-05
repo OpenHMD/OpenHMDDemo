@@ -35,12 +35,19 @@
 #include <OISKeyboard.h>
 #include <OISMouse.h>
 
+namespace Globals
+{
+    btDynamicsWorld *phyWorld;
+    BtOgre::DebugDrawer *dbgdraw;
+};
+
 class Application : public Ogre::FrameListener, public OIS::KeyListener, public OIS::MouseListener, public Ogre::WindowEventListener
 {
 public:
     Application(void);
     virtual ~Application(void);
     bool init(void);
+    void bulletInit();
 
     //Set of movement variables
     bool moveForward;
@@ -51,12 +58,22 @@ public:
     Ogre::String level;
 protected:
     Ogre::Root *mRoot;
-    //Ogre::Camera* mCamera;
-    Ogre::SceneNode* mCamera;
     Ogre::SceneManager* mSceneMgr;
     Ogre::RenderWindow* mWindow;
     Ogre::String mResourcesCfg;
     Ogre::String mPluginsCfg;
+
+    //Player
+    Ogre::SceneNode* mCamera;
+    Ogre::Entity* mPlayerEntity;
+    btRigidBody *mPlayerBody;
+    btCollisionShape *mPlayerShape;
+
+    //Bullet
+    btAxisSweep3 *mBroadphase;
+    btDefaultCollisionConfiguration *mCollisionConfig;
+    btCollisionDispatcher *mDispatcher;
+    btSequentialImpulseConstraintSolver *mSolver;
 
     bool mCursorWasVisible;                   // was cursor visible before dialog appeared
     bool mShutDown;

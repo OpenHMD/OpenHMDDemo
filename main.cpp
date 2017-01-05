@@ -48,8 +48,28 @@ Application::~Application(void)
     //Remove ourself as a Window listener
     Ogre::WindowEventUtilities::removeWindowEventListener(mWindow, this);
     windowClosed(mWindow);
+
+        //Free Bullet stuff.
+    delete Globals::dbgdraw;
+    delete Globals::phyWorld;
+    delete mSolver;
+    delete mDispatcher;
+    delete mCollisionConfig;
+    delete mBroadphase;
+
     delete mRoot;
     delete openhmd;
+}
+
+void Application::bulletInit()
+{
+    mBroadphase = new btAxisSweep3(btVector3(-10000,-10000,-10000), btVector3(10000,10000,10000), 1024);
+    mCollisionConfig = new btDefaultCollisionConfiguration();
+    mDispatcher = new btCollisionDispatcher(mCollisionConfig);
+    mSolver = new btSequentialImpulseConstraintSolver();
+
+    Globals::phyWorld = new btDiscreteDynamicsWorld(mDispatcher, mBroadphase, mSolver, mCollisionConfig);
+    Globals::phyWorld->setGravity(btVector3(0,-9.81,0));
 }
 
 bool Application::init(void)
@@ -88,7 +108,7 @@ bool Application::init(void)
     // Show the configuration dialog and initialise the system
     // You can skip this and use root.restoreConfig() to load configuration
     // settings if you were sure there are valid ones saved in ogre.cfg
-    if(mRoot->restoreConfig() || mRoot->showConfigDialog())
+    if(mRoot->showConfigDialog()) //mRoot->restoreConfig()
     {
         // If returned true, user clicked OK so initialise
         // Here we choose to let the system create a default rendering window by passing 'true'
@@ -104,6 +124,9 @@ bool Application::init(void)
 
     // Create the cameras and cameraNode
     mCamera = mSceneMgr->createSceneNode("mCamera");//mSceneMgr->createCamera("PlayerCam");
+    mPlayerEntity = mSceneMgr->createEntity("PlayerCube", Ogre::SceneManager::PT_CUBE);
+    mCamera->attachObject(mPlayerEntity);
+
     stereo_cam_left = mSceneMgr->createCamera("leftCam");
     stereo_cam_right = mSceneMgr->createCamera("rightCam");
 
@@ -209,6 +232,25 @@ bool Application::init(void)
     //Set initial mouse clipping size
     windowResized(mWindow);
 
+    ///Bullet Stuff
+    bulletInit();
+    Globals::dbgdraw = new BtOgre::DebugDrawer(mSceneMgr->getRootSceneNode(), Globals::phyWorld);
+    Globals::phyWorld->setDebugDrawer(Globals::dbgdraw);
+    BtOgre::StaticMeshToShapeConverter converter(mPlayerEntity);
+    mPlayerShape = converter.createSphere();
+
+    //Calculate inertia.
+    btScalar mass = 5;
+    btVector3 inertia;
+    mPlayerShape->calculateLocalInertia(mass, inertia);
+
+    //Create BtOgre MotionState (connects Ogre and Bullet).
+    BtOgre::RigidBodyState *playerRBState = new BtOgre::RigidBodyState(mCamera);
+
+    //Create the Body.
+    mPlayerBody = new btRigidBody(mass, playerRBState, mPlayerShape, inertia);
+    Globals::phyWorld->addRigidBody(mPlayerBody);
+
     //Register as a Window listener
     Ogre::WindowEventUtilities::addWindowEventListener(mWindow, this);
     mRoot->addFrameListener(this);
@@ -243,6 +285,14 @@ bool Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
     Ogre::Quaternion oculusCameraOrientation = openhmd->getQuaternion();
     stereo_cam_left->setOrientation(oculusCameraOrientation);
     stereo_cam_right->setOrientation(oculusCameraOrientation);
+
+    //Update Bullet world. Don't forget the debugDrawWorld() part!
+    Globals::phyWorld->stepSimulation(evt.timeSinceLastFrame, 10);
+    Globals::phyWorld->debugDrawWorld();
+
+    //Shows debug if F3 key down.
+    Globals::dbgdraw->setDebugMode(mKeyboard->isKeyDown(OIS::KC_F3));
+    Globals::dbgdraw->step();
 
     return true;
 }
