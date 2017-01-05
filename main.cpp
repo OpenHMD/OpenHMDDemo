@@ -20,7 +20,7 @@
 */
 
 #include "main.h"
-
+#include "OgreEuler.h"
 
 Application::Application(void)
     : mRoot(0),
@@ -70,6 +70,50 @@ void Application::bulletInit()
 
     Globals::phyWorld = new btDiscreteDynamicsWorld(mDispatcher, mBroadphase, mSolver, mCollisionConfig);
     Globals::phyWorld->setGravity(btVector3(0,-9.81,0));
+}
+
+void Application::lazyCollisions()
+{
+    //Convert Player
+    BtOgre::StaticMeshToShapeConverter converter(mPlayerEntity);
+    mPlayerShape = converter.createConvex();
+
+    //Calculate inertia.
+    btScalar mass = 5;
+    btVector3 inertia;
+    mPlayerShape->calculateLocalInertia(mass, inertia);
+
+    //Create BtOgre MotionState (connects Ogre and Bullet).
+    BtOgre::RigidBodyState *playerRBState = new BtOgre::RigidBodyState(mCamera);
+
+    //Create the Body.
+    mPlayerBody = new btRigidBody(mass, playerRBState, mPlayerShape, inertia);
+    mPlayerBody->setAngularFactor(btVector3(0,0,0));
+    Globals::phyWorld->addRigidBody(mPlayerBody);
+
+    //Convert all objects which are not the Player to a trimesh collision object
+    Ogre::SceneManager::MovableObjectIterator iterator = mSceneMgr->getMovableObjectIterator("Entity");
+    while(iterator.hasMoreElements())
+    {
+        Ogre::Entity* eobj = static_cast<Ogre::Entity*>(iterator.getNext());
+
+        if (eobj->getName() == "PlayerCube")
+        {
+        }
+        else
+        {
+            //Create the ground shape.
+            BtOgre::StaticMeshToShapeConverter converter2(eobj);
+            btBvhTriangleMeshShape* mCollisionShape = converter2.createTrimesh();
+
+            //Create MotionState (no need for BtOgre here, you can use it if you want to though).
+            btDefaultMotionState* collisionState = new btDefaultMotionState(btTransform(btQuaternion(0,0,0,1),btVector3(0,0,0)));
+
+            //Create the Body.
+            btRigidBody* mCollisionBody = new btRigidBody(0, collisionState, mCollisionShape, btVector3(0,0,0));
+            Globals::phyWorld->addRigidBody(mCollisionBody);
+        }
+    }
 }
 
 bool Application::init(void)
@@ -126,6 +170,7 @@ bool Application::init(void)
     mCamera = mSceneMgr->createSceneNode("mCamera");//mSceneMgr->createCamera("PlayerCam");
     mPlayerEntity = mSceneMgr->createEntity("PlayerCube", Ogre::SceneManager::PT_CUBE);
     mCamera->attachObject(mPlayerEntity);
+    mCamera->setScale(0.1,0.1,0.1);
 
     stereo_cam_left = mSceneMgr->createCamera("leftCam");
     stereo_cam_right = mSceneMgr->createCamera("rightCam");
@@ -236,20 +281,7 @@ bool Application::init(void)
     bulletInit();
     Globals::dbgdraw = new BtOgre::DebugDrawer(mSceneMgr->getRootSceneNode(), Globals::phyWorld);
     Globals::phyWorld->setDebugDrawer(Globals::dbgdraw);
-    BtOgre::StaticMeshToShapeConverter converter(mPlayerEntity);
-    mPlayerShape = converter.createSphere();
-
-    //Calculate inertia.
-    btScalar mass = 5;
-    btVector3 inertia;
-    mPlayerShape->calculateLocalInertia(mass, inertia);
-
-    //Create BtOgre MotionState (connects Ogre and Bullet).
-    BtOgre::RigidBodyState *playerRBState = new BtOgre::RigidBodyState(mCamera);
-
-    //Create the Body.
-    mPlayerBody = new btRigidBody(mass, playerRBState, mPlayerShape, inertia);
-    Globals::phyWorld->addRigidBody(mPlayerBody);
+    lazyCollisions();
 
     //Register as a Window listener
     Ogre::WindowEventUtilities::addWindowEventListener(mWindow, this);
@@ -273,10 +305,17 @@ bool Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
     mMouse->capture();
 
 	//Update camera movement
-	if (moveForward) mCamera->translate(Ogre::Vector3(0,0,-0.01), Ogre::Node::TS_LOCAL);
-	if (moveBack) mCamera->translate(Ogre::Vector3(0,0,0.01), Ogre::Node::TS_LOCAL);
-	if (moveLeft) mCamera->translate(Ogre::Vector3(-0.01,0,0), Ogre::Node::TS_LOCAL);
-	if (moveRight) mCamera->translate(Ogre::Vector3(0.01,0,0), Ogre::Node::TS_LOCAL);
+    Ogre::Vector3 movement = Ogre::Vector3::ZERO;
+	if (moveForward) movement.z -=4;
+	if (moveBack) movement.z +=4;
+	if (moveLeft) movement.x -=4;
+	if (moveRight) movement.x +=4;
+
+    if (movement != Ogre::Vector3::ZERO)
+    {
+        movement = mCamera->_getDerivedOrientation()*movement;
+        mPlayerBody->setLinearVelocity(btVector3(movement.x, movement.y, movement.z));
+    }
 
 	//Update OpenHMD
 	openhmd->update();
@@ -364,21 +403,33 @@ bool Application::mouseMoved( const OIS::MouseEvent &arg )
 {
 	if ( arg.state.X.rel != 0 )
 	{
-		//Horisontal rotation
+		//horizontal rotation
+        Ogre::Quaternion rotX;
 		if (arg.state.X.rel > 0)
-			mCamera->yaw(Ogre::Degree(-0.5), Ogre::Node::TS_WORLD);
+			rotX = Ogre::Euler(-0.05, 0, 0).toQuaternion();
 		else
-			mCamera->yaw(Ogre::Degree(0.5), Ogre::Node::TS_WORLD);
+			rotX = Ogre::Euler(0.05, 0, 0).toQuaternion();
+
+        mCamera->rotate(rotX, Ogre::SceneNode::TS_LOCAL);
 	}
 
 	if ( arg.state.Y.rel != 0 )
 	{
+        Ogre::Quaternion rotZ;
 		//vertical rotation
 		if (arg.state.Y.rel > 0)
-			mCamera->pitch(Ogre::Degree(-0.5), Ogre::Node::TS_LOCAL);
+			rotZ = Ogre::Euler(0, -0.05, 0).toQuaternion();
 		else
-			mCamera->pitch(Ogre::Degree(0.5), Ogre::Node::TS_LOCAL);
+			rotZ = Ogre::Euler(0, 0.05, 0).toQuaternion();
+
+        //mCamera->rotate(rotZ, Ogre::SceneNode::TS_LOCAL);
+        ///NOTE: For HMD games, Rolling the camera is bad, should be left to the player.
 	}
+
+    btTransform trans = mPlayerBody->getWorldTransform();
+    Ogre::Quaternion v = mCamera->_getDerivedOrientation();
+    trans.setRotation(btQuaternion(v.x, v.y, v.z, v.w));
+    mPlayerBody->setWorldTransform(trans);
 
     return true;
 }

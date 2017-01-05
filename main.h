@@ -48,6 +48,7 @@ public:
     virtual ~Application(void);
     bool init(void);
     void bulletInit();
+    void lazyCollisions();
 
     //Set of movement variables
     bool moveForward;
