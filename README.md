@@ -34,4 +34,5 @@ like Debian Sid or Ubuntu Zesty.
 CMake is used for building, if libraries are missing it will prompt which ones are missing.
 Basic compilation should be:
 >cmake .
+
 >make
