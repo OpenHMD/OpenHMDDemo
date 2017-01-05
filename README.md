@@ -1,4 +1,4 @@
-# OpenHMDDemo
+# OpenHMDDemo - With Bullet collisions
 
 OpenHMDDemo is a application written in Ogre (currently using stock 1.9) that shows a basic implementation of OpenHMD into a working functional framework.
 
@@ -8,6 +8,7 @@ Currently, just the basics are working, but a more pretty demo scene and some ad
 
 **Working:**
 - Functional OpenGL 2.1
+- Bullet physics integration
 - DotSceneLoader based on tinyxml
 - OpenHMD integrated with Oculus DK1 and DK2 in mind (1280x800 and 1920x1080 with 2x oversampling shaders)
 - Wireframe rendering toggle (r)
@@ -15,7 +16,6 @@ Currently, just the basics are working, but a more pretty demo scene and some ad
 - CMake!
 
 **To-Do:**
-- Basic collision system
 - Simple shaders (Primarily Normalmapping)
 - Finish demo scene! (something fancy in the works)
 - Modern GL version using Ogre 1.10 with newer GL 3.3+ renderer
@@ -27,7 +27,7 @@ The code uses default Ogre 1.9, tested with a boost compiled version from the Ub
 ###Debian/Ubuntu based distro's
 
 There are some basic dependencies to be able to compile this project.
->sudo apt-get install libogre-1.9-dev libois-dev libtinyxml-dev
+>sudo apt-get install libogre-1.9-dev libois-dev libtinyxml-dev libbullet-dev
 OpenHMD is required as well and can either be compiled from trunk (recommended) or installed from some repositories
 like Debian Sid or Ubuntu Zesty.
 
