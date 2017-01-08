@@ -38,7 +38,7 @@
   </nodes>
   <externals >
     <item type="material" >
-      <file name="/home/thorworks/Code/OpenHMDDemo/resources/TestMaterial.material" />
+      <file name="TestMaterial.material" />
     </item>
   </externals>
   <environment >

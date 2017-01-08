@@ -56,6 +56,9 @@ public:
     bool moveLeft;
     bool moveRight;
 
+    //bullet
+    bool debugPhysics;
+
     Ogre::String level;
 protected:
     Ogre::Root *mRoot;
@@ -66,6 +69,7 @@ protected:
 
     //Player
     Ogre::SceneNode* mCamera;
+    Ogre::SceneNode* mPlayerNode;
     Ogre::Entity* mPlayerEntity;
     btRigidBody *mPlayerBody;
     btCollisionShape *mPlayerShape;

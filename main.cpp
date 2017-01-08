@@ -21,6 +21,7 @@
 
 #include "main.h"
 #include "OgreEuler.h"
+#include "OgreHelpers.h"
 
 Application::Application(void)
     : mRoot(0),
@@ -39,7 +40,9 @@ Application::Application(void)
     moveLeft(false),
     moveRight(false),
     stereo_cam_left(0),
-    stereo_cam_right(0)
+    stereo_cam_right(0),
+    mPlayerNode(0),
+    debugPhysics(false)
 {
 }
 
@@ -84,11 +87,12 @@ void Application::lazyCollisions()
     mPlayerShape->calculateLocalInertia(mass, inertia);
 
     //Create BtOgre MotionState (connects Ogre and Bullet).
-    BtOgre::RigidBodyState *playerRBState = new BtOgre::RigidBodyState(mCamera);
+    BtOgre::RigidBodyState* playerRBState = new BtOgre::RigidBodyState(mPlayerNode);
 
     //Create the Body.
     mPlayerBody = new btRigidBody(mass, playerRBState, mPlayerShape, inertia);
     mPlayerBody->setAngularFactor(btVector3(0,0,0));
+    mPlayerBody->setActivationState(DISABLE_DEACTIVATION);
     Globals::phyWorld->addRigidBody(mPlayerBody);
 
     //Convert all objects which are not the Player to a trimesh collision object
@@ -102,6 +106,8 @@ void Application::lazyCollisions()
         }
         else
         {
+            Ogre::AxisAlignedBox aabb = eobj->getBoundingBox();
+            printf("AABB size of object %s is %f %f %f\n", eobj->getName().c_str(), aabb.getSize().x, aabb.getSize().y, aabb.getSize().z);
             //Create the ground shape.
             BtOgre::StaticMeshToShapeConverter converter2(eobj);
             btBvhTriangleMeshShape* mCollisionShape = converter2.createTrimesh();
@@ -167,15 +173,20 @@ bool Application::init(void)
     mSceneMgr = mRoot->createSceneManager(Ogre::ST_GENERIC);
 
     // Create the cameras and cameraNode
-    mCamera = mSceneMgr->createSceneNode("mCamera");//mSceneMgr->createCamera("PlayerCam");
+    mPlayerNode = mSceneMgr->getRootSceneNode()->createChildSceneNode("mPlayerNode");
     mPlayerEntity = mSceneMgr->createEntity("PlayerCube", Ogre::SceneManager::PT_CUBE);
-    mCamera->attachObject(mPlayerEntity);
-    mCamera->setScale(0.1,0.1,0.1);
+    mPlayerEntity->setMaterialName("TestMaterial");
+    mPlayerNode->attachObject(mPlayerEntity);
+    mPlayerNode->setScale(0.011,0.0172,0.006);
+
+    mCamera = mSceneMgr->getRootSceneNode()->createChildSceneNode("mCamera");
+    mCamera->setPosition(Ogre::Vector3(0, 1.72/2, 0));
+    attachInPlace(mSceneMgr->getRootSceneNode(), mCamera, mPlayerNode);
 
     stereo_cam_left = mSceneMgr->createCamera("leftCam");
     stereo_cam_right = mSceneMgr->createCamera("rightCam");
 
-    mCamera->setPosition(Ogre::Vector3(0,0,10)); //Spawn position
+    mPlayerNode->setPosition(Ogre::Vector3(0,1,0)); //Spawn position
 
     // Set default mipmap level (NB some APIs ignore this)
     Ogre::TextureManager::getSingleton().setDefaultNumMipmaps(5);
@@ -281,6 +292,7 @@ bool Application::init(void)
     bulletInit();
     Globals::dbgdraw = new BtOgre::DebugDrawer(mSceneMgr->getRootSceneNode(), Globals::phyWorld);
     Globals::phyWorld->setDebugDrawer(Globals::dbgdraw);
+    Globals::dbgdraw->setDebugMode(debugPhysics);
     lazyCollisions();
 
     //Register as a Window listener
@@ -313,8 +325,12 @@ bool Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
 
     if (movement != Ogre::Vector3::ZERO)
     {
-        movement = mCamera->_getDerivedOrientation()*movement;
+        movement = mPlayerNode->_getDerivedOrientation()*movement;
         mPlayerBody->setLinearVelocity(btVector3(movement.x, movement.y, movement.z));
+    }
+    else //stop
+    {
+        mPlayerBody->setLinearVelocity(btVector3(0, mPlayerBody->getLinearVelocity().y(), 0));
     }
 
 	//Update OpenHMD
@@ -329,8 +345,6 @@ bool Application::frameRenderingQueued(const Ogre::FrameEvent& evt)
     Globals::phyWorld->stepSimulation(evt.timeSinceLastFrame, 10);
     Globals::phyWorld->debugDrawWorld();
 
-    //Shows debug if F3 key down.
-    Globals::dbgdraw->setDebugMode(mKeyboard->isKeyDown(OIS::KC_F3));
     Globals::dbgdraw->step();
 
     return true;
@@ -344,6 +358,7 @@ bool Application::keyPressed( const OIS::KeyEvent &arg )
 		case OIS::KC_S: moveBack = true; break;
 		case OIS::KC_A: moveLeft = true; break;
 		case OIS::KC_D: moveRight = true; break;
+        case OIS::KC_SPACE: mPlayerBody->applyImpulse(btVector3(0,20,0), btVector3(0,0,0)); break;
 
         case OIS::KC_L: // toggle the lens correction shader
         {
@@ -379,6 +394,7 @@ bool Application::keyPressed( const OIS::KeyEvent &arg )
 			break;
 		}
 		case OIS::KC_F5: Ogre::TextureManager::getSingleton().reloadAll(); break; // refresh all textures
+        case OIS::KC_F6: Globals::dbgdraw->setDebugMode((debugPhysics = !debugPhysics)); break; //Shows debug if F3 key down.
 		case OIS::KC_SYSRQ: mWindow->writeContentsToTimestampedFile("screenshot", ".jpg"); break; // take a screenshot
 		case OIS::KC_ESCAPE: mShutDown = true; break;
 
@@ -401,33 +417,35 @@ bool Application::keyReleased( const OIS::KeyEvent &arg )
 
 bool Application::mouseMoved( const OIS::MouseEvent &arg )
 {
-	if ( arg.state.X.rel != 0 )
+    int relX = arg.state.X.rel;
+    int relY = arg.state.Y.rel;
+	if ( relX != 0 )
 	{
 		//horizontal rotation
         Ogre::Quaternion rotX;
-		if (arg.state.X.rel > 0)
-			rotX = Ogre::Euler(-0.05, 0, 0).toQuaternion();
+		if (relX > 0)
+			rotX = Ogre::Euler(-(float)relX/100, 0, 0).toQuaternion();
 		else
-			rotX = Ogre::Euler(0.05, 0, 0).toQuaternion();
+			rotX = Ogre::Euler(-(float)relX/100, 0, 0).toQuaternion();
 
-        mCamera->rotate(rotX, Ogre::SceneNode::TS_LOCAL);
+        mPlayerNode->rotate(rotX, Ogre::SceneNode::TS_LOCAL);
 	}
 
-	if ( arg.state.Y.rel != 0 )
+	if ( relY != 0 )
 	{
         Ogre::Quaternion rotZ;
 		//vertical rotation
-		if (arg.state.Y.rel > 0)
-			rotZ = Ogre::Euler(0, -0.05, 0).toQuaternion();
+		if (relY > 0)
+			rotZ = Ogre::Euler(0, -relY/100, 0).toQuaternion();
 		else
-			rotZ = Ogre::Euler(0, 0.05, 0).toQuaternion();
+			rotZ = Ogre::Euler(0, relY/100, 0).toQuaternion();
 
-        //mCamera->rotate(rotZ, Ogre::SceneNode::TS_LOCAL);
+        //mPlayerNode->rotate(rotZ, Ogre::SceneNode::TS_LOCAL);
         ///NOTE: For HMD games, Rolling the camera is bad, should be left to the player.
 	}
 
     btTransform trans = mPlayerBody->getWorldTransform();
-    Ogre::Quaternion v = mCamera->_getDerivedOrientation();
+    Ogre::Quaternion v = mPlayerNode->_getDerivedOrientation();
     trans.setRotation(btQuaternion(v.x, v.y, v.z, v.w));
     mPlayerBody->setWorldTransform(trans);
 
@@ -490,7 +508,7 @@ extern "C" {
     int main(int argc, char *argv[])
 #endif
     {
-		Ogre::String level = "resources/TestChamber.scene";
+		Ogre::String level = "resources/PhysicsWarehouse/PhysicsWarehouse.scene";
 		if ( argc > 1 ) // There are Command line parameters
 		{
 			for(int i = 1; i < argc; i++)
