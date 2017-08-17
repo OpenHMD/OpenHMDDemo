@@ -8,7 +8,7 @@
 #ifndef _OCULUSMANAGER_H_
 #define _OCULUSMANAGER_H_
 
-#include <openhmd/openhmd.h>
+#include <openhmd.h>
 #include <OgreMatrix4.h>
 #include <OgreMath.h>
 #include <OgreVector2.h>
