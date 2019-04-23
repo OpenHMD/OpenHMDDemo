@@ -20,20 +20,23 @@ Currently, just the basics are working, but a more pretty demo scene and some ad
 - Finish demo scene! (something fancy in the works)
 - Modern GL version using Ogre 1.10 with newer GL 3.3+ renderer
 
-##Compiling
+## Compiling
 
 The code uses default Ogre 1.9, tested with a boost compiled version from the Ubuntu 14.04 repository (non boost versions should work as well).
 
-###Debian/Ubuntu based distro's
+### Debian/Ubuntu based distro's
 
 There are some basic dependencies to be able to compile this project.
->sudo apt-get install libogre-1.9-dev libois-dev libtinyxml-dev
+```
+sudo apt-get install libogre-1.9-dev libois-dev libtinyxml-dev
+```
 
 OpenHMD is required as well and can either be compiled from trunk (recommended) or installed from some repositories
 like Debian Sid or Ubuntu Zesty.
 
 CMake is used for building, if libraries are missing it will prompt which ones are missing.
 Basic compilation should be:
->cmake .
-
->make
+```
+cmake .
+make
+```
